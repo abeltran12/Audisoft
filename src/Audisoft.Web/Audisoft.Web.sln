@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{BFD7F496-87FA-439C-90F0-14CC5D1DE430}") = "Audisoft.Web", "Audisoft.Web.csproj", "{95E8C16C-BD59-4754-BEBF-A44B1EC49B6C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95E8C16C-BD59-4754-BEBF-A44B1EC49B6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95E8C16C-BD59-4754-BEBF-A44B1EC49B6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95E8C16C-BD59-4754-BEBF-A44B1EC49B6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95E8C16C-BD59-4754-BEBF-A44B1EC49B6C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4B7A7F6-939B-4A8E-BDDA-91EA1DE717A3}
+	EndGlobalSection
+EndGlobal

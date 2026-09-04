@@ -1,0 +1,29 @@
+﻿.app-toast {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1080;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.app-toast-success {
+    background-color: #eef1f4;
+    border-left: 4px solid #5b7590;
+}
+
+.app-toast-error {
+    background-color: #f4eeee;
+    border-left: 4px solid #a15c5c;
+}
+
+.btn-close-toast {
+    margin-left: auto;
+    background: none;
+    border: none;
+    opacity: 0.6;
+}

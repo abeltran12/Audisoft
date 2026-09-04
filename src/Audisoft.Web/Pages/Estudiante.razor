@@ -1,0 +1,330 @@
+﻿@page "/estudiantes"
+@using System.ComponentModel.DataAnnotations
+@inject IEstudianteApiService EstudianteApiService
+
+<PageTitle>Estudiantes</PageTitle>
+
+<div class="container py-4 estudiantes-page">
+    <h4 class="mb-3">Estudiantes</h4>
+
+    <div class="mb-3 action-bar">
+        <button class="btn-icon-circle" title="Refrescar" @onclick="RefrescarAsync">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button class="btn-icon-circle" title="Editar"
+                disabled="@(!estudianteSeleccionadoId.HasValue)" @onclick="AbrirModalEditar">
+            <i class="bi bi-pencil"></i>
+        </button>
+        <button class="btn-icon-circle" title="Eliminar"
+                disabled="@(!estudianteSeleccionadoId.HasValue)" @onclick="AbrirConfirmarEliminar">
+            <i class="bi bi-trash"></i>
+        </button>
+        <button class="btn-icon-circle" title="Crear" @onclick="AbrirModalCrear">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    </div>
+
+    <div class="panel-card">
+        <div class="panel-header">Estudiantes</div>
+        <table class="table table-panel align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="col-id">
+                        <div class="col-header-stack">
+                            <span class="col-header-label">Id</span>
+                            <input type="number" class="form-control form-control-sm col-search-input" @bind="filtroId" @bind:event="oninput"
+                                   @bind:after="BuscarAsync" />
+                        </div>
+                    </th>
+                    <th class="col-divider">
+                        <div class="col-header-stack">
+                            <span class="col-header-label">Nombre</span>
+                            <input class="form-control form-control-sm col-search-input" @bind="filtroNombre" @bind:event="oninput"
+                                   @bind:after="BuscarAsync" />
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (cargando)
+                {
+                    <tr>
+                        <td colspan="2" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-dark" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else if (estudiantes is null || estudiantes.Count == 0)
+                {
+                    <tr>
+                        <td colspan="2" class="text-muted text-center py-4">No se encontraron estudiantes.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var estudiante in estudiantes)
+                    {
+                        <tr class="@(estudianteSeleccionadoId == estudiante.Id ? "table-active" : "")"
+                            @onclick="() => estudianteSeleccionadoId = estudiante.Id">
+                            <td>@estudiante.Id</td>
+                            <td>@estudiante.Nombre</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+        <div class="panel-footer">
+            Registros encontrados: @(estudiantes?.MetaData.TotalCount ?? 0)
+        </div>
+    </div>
+
+    @if (!cargando && estudiantes is not null && estudiantes.Count > 0)
+    {
+        <nav>
+            <ul class="pagination pagination-teal justify-content-center mt-3">
+                <li class="page-item @(estudiantes.MetaData.HasPrevious ? "" : "disabled")">
+                    <button class="page-link" @onclick="() => CambiarPaginaAsync(estudiantes.MetaData.CurrentPage - 1)">Anterior</button>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Página @estudiantes.MetaData.CurrentPage de @estudiantes.MetaData.TotalPages</span>
+                </li>
+                <li class="page-item @(estudiantes.MetaData.HasNext ? "" : "disabled")">
+                    <button class="page-link" @onclick="() => CambiarPaginaAsync(estudiantes.MetaData.CurrentPage + 1)">Siguiente</button>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+@if (mostrarModalForm)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm Model="formModel" OnValidSubmit="GuardarAsync">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">@(esEdicion ? "Editar estudiante" : "Crear estudiante")</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModalForm"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Nombre</label>
+                        <InputText class="form-control" @bind-Value="formModel.Nombre" placeholder="Nombre del estudiante" />
+                        <ValidationMessage For="() => formModel.Nombre" class="text-danger small mt-1 d-block" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CerrarModalForm">Cancelar</button>
+                        <button type="submit" class="btn btn-dark" disabled="@guardando">
+                            @(guardando ? "Guardando..." : "Aceptar")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarConfirmarEliminar)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Eliminar estudiante</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarConfirmarEliminar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Seguro que deseas eliminar este estudiante?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="CerrarConfirmarEliminar">Cancelar</button>
+                    <button class="btn btn-dark" @onclick="ConfirmarEliminarAsync" disabled="@guardando">
+                        @(guardando ? "Eliminando..." : "Aceptar")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<Toast Visible="mostrarToast" IsError="toastEsError" Message="@toastMensaje" OnClose="() => mostrarToast = false" />
+
+@code {
+    private PagedList<EstudianteRequest>? estudiantes;
+    private string filtroNombre = string.Empty;
+    private int? filtroId;
+    private int paginaActual = 1;
+    private bool cargando = true;
+
+    private int? estudianteSeleccionadoId;
+
+    private bool mostrarModalForm;
+    private bool esEdicion;
+    private int? idEnEdicion;
+    private EstudianteFormModel formModel = new();
+    private bool guardando;
+
+    private bool mostrarConfirmarEliminar;
+
+    private bool mostrarToast;
+    private bool toastEsError;
+    private string toastMensaje = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAsync();
+    }
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        try
+        {
+            var parameters = new EstudianteParameters
+            {
+                Nombre = string.IsNullOrWhiteSpace(filtroNombre) ? null : filtroNombre,
+                Id = filtroId,
+                PageNumber = paginaActual,
+                PageSize = 10
+            };
+
+            estudiantes = await EstudianteApiService.GetEstudiantesAsync(parameters);
+        }
+        catch (ApiException ex)
+        {
+            MostrarToast(ex.Message, esError: true);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task BuscarAsync()
+    {
+        paginaActual = 1;
+        estudianteSeleccionadoId = null;
+        await CargarAsync();
+    }
+
+    private async Task RefrescarAsync()
+    {
+        filtroNombre = string.Empty;
+        filtroId = null;
+        paginaActual = 1;
+        estudianteSeleccionadoId = null;
+        await CargarAsync();
+    }
+
+    private async Task CambiarPaginaAsync(int nuevaPagina)
+    {
+        paginaActual = nuevaPagina;
+        estudianteSeleccionadoId = null;
+        await CargarAsync();
+    }
+
+    private void AbrirModalCrear()
+    {
+        esEdicion = false;
+        idEnEdicion = null;
+        formModel = new EstudianteFormModel();
+        mostrarModalForm = true;
+    }
+
+    private void AbrirModalEditar()
+    {
+        var estudiante = estudiantes?.FirstOrDefault(e => e.Id == estudianteSeleccionadoId);
+        if (estudiante is null) return;
+
+        esEdicion = true;
+        idEnEdicion = estudiante.Id;
+        formModel = new EstudianteFormModel { Nombre = estudiante.Nombre };
+        mostrarModalForm = true;
+    }
+
+    private void CerrarModalForm()
+    {
+        mostrarModalForm = false;
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+        try
+        {
+            if (esEdicion && idEnEdicion.HasValue)
+            {
+                await EstudianteApiService.UpdateEstudianteAsync(idEnEdicion.Value, new UpdateEstudianteRequest(formModel.Nombre));
+                MostrarToast("Estudiante actualizado correctamente.", esError: false);
+            }
+            else
+            {
+                await EstudianteApiService.CreateEstudianteAsync(new CreateEstudianteRequest(formModel.Nombre));
+                MostrarToast("Estudiante creado correctamente.", esError: false);
+            }
+
+            mostrarModalForm = false;
+            estudianteSeleccionadoId = null;
+            await CargarAsync();
+        }
+        catch (ApiException ex)
+        {
+            MostrarToast(ex.Message, esError: true);
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void AbrirConfirmarEliminar()
+    {
+        mostrarConfirmarEliminar = true;
+    }
+
+    private void CerrarConfirmarEliminar()
+    {
+        mostrarConfirmarEliminar = false;
+    }
+
+    private async Task ConfirmarEliminarAsync()
+    {
+        if (!estudianteSeleccionadoId.HasValue) return;
+
+        guardando = true;
+        try
+        {
+            await EstudianteApiService.DeleteEstudianteAsync(estudianteSeleccionadoId.Value);
+            MostrarToast("Estudiante eliminado correctamente.", esError: false);
+
+            mostrarConfirmarEliminar = false;
+            estudianteSeleccionadoId = null;
+            await CargarAsync();
+        }
+        catch (ApiException ex)
+        {
+            MostrarToast(ex.Message, esError: true);
+            mostrarConfirmarEliminar = false;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void MostrarToast(string mensaje, bool esError)
+    {
+        toastMensaje = mensaje;
+        toastEsError = esError;
+        mostrarToast = true;
+    }
+
+    private class EstudianteFormModel
+    {
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres.")]
+        public string Nombre { get; set; } = string.Empty;
+    }
+}

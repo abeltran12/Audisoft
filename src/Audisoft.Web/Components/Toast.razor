@@ -1,0 +1,61 @@
+﻿@implements IDisposable
+
+@if (Visible)
+{
+    <div class="app-toast @(IsError ? "app-toast-error" : "app-toast-success")" role="alert">
+        <i class="bi @(IsError ? "bi-exclamation-circle" : "bi-check-circle")"></i>
+        <span>@Message</span>
+        <button type="button" class="btn-close-toast" @onclick="Close">&times;</button>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public bool IsError { get; set; }
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public int DurationMs { get; set; } = 4000;
+
+    private CancellationTokenSource? _cts;
+    private bool _previousVisible;
+
+    protected override void OnParametersSet()
+    {
+        if (Visible && !_previousVisible)
+        {
+            _cts?.Cancel();
+            _cts = new CancellationTokenSource();
+            _ = AutoCloseAsync(_cts.Token);
+        }
+        else if (!Visible)
+        {
+            _cts?.Cancel();
+        }
+
+        _previousVisible = Visible;
+    }
+
+    private async Task AutoCloseAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(DurationMs, token);
+            await Close();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private async Task Close()
+    {
+        Visible = false;
+        _cts?.Cancel();
+        await OnClose.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+    }
+}

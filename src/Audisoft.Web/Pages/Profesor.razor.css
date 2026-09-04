@@ -1,0 +1,140 @@
+.profesores-page h4 {
+    max-width: 960px;
+    margin: 0 auto 1rem;
+    color: var(--cf-dark-color);
+    font-weight: 600;
+}
+
+/* #region action buttons */
+.action-bar {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon-circle {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--cf-gray-800);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    transition: background-color .15s ease-in-out;
+}
+
+    .btn-icon-circle:hover:not(:disabled) {
+        background-color: var(--cf-gray-700);
+    }
+
+    .btn-icon-circle:disabled {
+        background-color: var(--cf-gray-400);
+        opacity: .8;
+        cursor: not-allowed;
+    }
+/* #endregion action buttons */
+
+/* #region panel + table */
+.panel-card {
+    max-width: 960px;
+    margin: 0 auto;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
+}
+
+.panel-header {
+    background-color: var(--cf-gray-800);
+    color: #fff;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+}
+
+.table-panel thead th {
+    background-color: var(--cf-gray-150);
+    color: var(--cf-dark-color);
+    border: none;
+    vertical-align: middle;
+    padding: 0.4rem 0.75rem;
+    font-weight: 500;
+}
+
+.table-panel {
+    table-layout: fixed;
+}
+
+.table-panel thead th.col-id {
+    width: 50%;
+}
+
+.table-panel thead th:not(.col-id) {
+    width: 50%;
+}
+
+.col-divider {
+    border-left: 1px solid #fff;
+}
+
+.col-header-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.col-header-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--cf-dark-color);
+}
+
+.col-search-input {
+    width: 100%;
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
+}
+
+.table-panel tbody tr {
+    cursor: pointer;
+}
+
+.table-panel tbody tr:hover {
+    background-color: var(--cf-gray-150);
+}
+
+.table-panel tbody tr.table-active,
+.table-panel tbody tr.table-active:hover {
+    background-color: var(--cf-gray-200);
+}
+
+.table-panel tbody td {
+    padding: 0.6rem 0.75rem;
+}
+
+.panel-footer {
+    padding: 0.5rem 1rem;
+    background-color: #fff;
+    color: #6c757d;
+    font-size: 0.85rem;
+    border-top: 1px solid var(--cf-gray-150);
+}
+/* #endregion panel + table */
+
+/* #region pagination */
+.pagination-teal .page-link {
+    color: var(--cf-dark-color);
+}
+
+.pagination-teal .page-item.active .page-link {
+    background-color: var(--cf-gray-800);
+    border-color: var(--cf-gray-800);
+    color: #fff;
+}
+
+.pagination-teal .page-item.disabled .page-link {
+    color: var(--cf-gray-500);
+}
+/* #endregion pagination */

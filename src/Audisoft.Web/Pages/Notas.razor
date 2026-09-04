@@ -1,0 +1,497 @@
+@page "/notas"
+@using System.ComponentModel.DataAnnotations
+@inject INotaApiService NotaApiService
+@inject IEstudianteApiService EstudianteApiService
+@inject IProfesorApiService ProfesorApiService
+
+<PageTitle>Notas</PageTitle>
+
+<div class="container py-4 notas-page">
+    <h4 class="mb-3">Notas</h4>
+
+    <div class="mb-3 action-bar">
+        <button class="btn-icon-circle" title="Refrescar" @onclick="RefrescarAsync">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button class="btn-icon-circle" title="Editar"
+                disabled="@(!notaSeleccionadaId.HasValue)" @onclick="AbrirModalEditar">
+            <i class="bi bi-pencil"></i>
+        </button>
+        <button class="btn-icon-circle" title="Eliminar"
+                disabled="@(!notaSeleccionadaId.HasValue)" @onclick="AbrirConfirmarEliminar">
+            <i class="bi bi-trash"></i>
+        </button>
+        <button class="btn-icon-circle" title="Crear" @onclick="AbrirModalCrear">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    </div>
+
+    <div class="panel-card">
+        <div class="panel-header">Notas</div>
+        <table class="table table-panel align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="col-header-stack">
+                            <span class="col-header-label">Fecha</span>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="col-header-stack">
+                            <span class="col-header-label">Estudiante</span>
+                            <select class="form-select form-select-sm col-search-input" @bind="filtroEstudianteId" @bind:after="BuscarAsync">
+                                <option value="">Todos</option>
+                                @foreach (var e in estudiantesActivos)
+                                {
+                                    <option value="@e.Id">@e.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="col-header-stack">
+                            <span class="col-header-label">Materia</span>
+                            <select class="form-select form-select-sm col-search-input" @bind="filtroMateria" @bind:after="BuscarAsync">
+                                <option value="">Todas</option>
+                                @foreach (var m in Enum.GetValues<Materias>())
+                                {
+                                    <option value="@m">@m</option>
+                                }
+                            </select>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="col-header-stack">
+                            <span class="col-header-label">Nota</span>
+                            <input type="number" min="0" max="20" class="form-control form-control-sm col-search-input" @bind="filtroValorMinimo"
+                                   @bind:event="oninput" @bind:after="BuscarAsync" placeholder="Mín." />
+                        </div>
+                    </th>
+                    <th>
+                        <div class="col-header-stack">
+                            <span class="col-header-label">Profesor</span>
+                            <select class="form-select form-select-sm col-search-input" @bind="filtroProfesorId" @bind:after="BuscarAsync">
+                                <option value="">Todos</option>
+                                @foreach (var p in profesoresActivos)
+                                {
+                                    <option value="@p.Id">@p.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (cargando)
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-dark" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else if (notas is null || notas.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="text-muted text-center py-4">No se encontraron notas.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var nota in notas)
+                    {
+                        <tr class="@(notaSeleccionadaId == nota.Id ? "table-active" : "")"
+                            @onclick="() => notaSeleccionadaId = nota.Id">
+                            <td>@nota.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>@nota.EstudianteNombre</td>
+                            <td>@nota.Materia</td>
+                            <td>@nota.Valor</td>
+                            <td>@nota.ProfesorNombre</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+        <div class="panel-footer">
+            Registros encontrados: @(notas?.MetaData.TotalCount ?? 0)
+        </div>
+    </div>
+
+    @if (!cargando && notas is not null && notas.Count > 0)
+    {
+        <nav>
+            <ul class="pagination pagination-teal justify-content-center mt-3">
+                <li class="page-item @(notas.MetaData.HasPrevious ? "" : "disabled")">
+                    <button class="page-link" @onclick="() => CambiarPaginaAsync(notas.MetaData.CurrentPage - 1)">Anterior</button>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Página @notas.MetaData.CurrentPage de @notas.MetaData.TotalPages</span>
+                </li>
+                <li class="page-item @(notas.MetaData.HasNext ? "" : "disabled")">
+                    <button class="page-link" @onclick="() => CambiarPaginaAsync(notas.MetaData.CurrentPage + 1)">Siguiente</button>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+@if (mostrarModalForm)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm Model="formModel" OnValidSubmit="GuardarAsync">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">@(esEdicion ? "Editar nota" : "Crear nota")</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModalForm"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (!esEdicion)
+                        {
+                            <div class="mb-2">
+                                <label class="form-label">Nombre</label>
+                                <InputText class="form-control" @bind-Value="formModel.Nombre" placeholder="Nombre de la evaluación" />
+                                <ValidationMessage For="() => formModel.Nombre" class="text-danger small mt-1 d-block" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Fecha</label>
+                                <InputDate class="form-control" @bind-Value="formModel.Fecha" />
+                                <ValidationMessage For="() => formModel.Fecha" class="text-danger small mt-1 d-block" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Estudiante</label>
+                                <InputSelect class="form-select" @bind-Value="formModel.EstudianteId">
+                                    <option value="0">Seleccione un estudiante...</option>
+                                    @foreach (var e in estudiantesActivos)
+                                    {
+                                        <option value="@e.Id">@e.Nombre</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="() => formModel.EstudianteId" class="text-danger small mt-1 d-block" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Profesor</label>
+                                <InputSelect class="form-select" @bind-Value="formModel.ProfesorId">
+                                    <option value="0">Seleccione un profesor...</option>
+                                    @foreach (var p in profesoresActivos)
+                                    {
+                                        <option value="@p.Id">@p.Nombre</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="() => formModel.ProfesorId" class="text-danger small mt-1 d-block" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-2">
+                                <label class="form-label d-block fw-bold">Estudiante</label>
+                                <span>@notaEnEdicion?.EstudianteNombre</span>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label d-block fw-bold">Profesor</label>
+                                <span>@notaEnEdicion?.ProfesorNombre</span>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label d-block fw-bold">Nombre</label>
+                                <span>@notaEnEdicion?.Nombre</span>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label d-block fw-bold">Fecha</label>
+                                <span>@notaEnEdicion?.Fecha.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        }
+                        <div class="mb-2">
+                            <label class="form-label">Materia</label>
+                            <InputSelect class="form-select" @bind-Value="formModel.Materia">
+                                <option value="">Seleccione una materia...</option>
+                                @foreach (var m in Enum.GetValues<Materias>())
+                                {
+                                    <option value="@m">@m</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => formModel.Materia" class="text-danger small mt-1 d-block" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Nota</label>
+                            <InputNumber class="form-control" @bind-Value="formModel.Valor" />
+                            <ValidationMessage For="() => formModel.Valor" class="text-danger small mt-1 d-block" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CerrarModalForm">Cancelar</button>
+                        <button type="submit" class="btn btn-dark" disabled="@guardando">
+                            @(guardando ? "Guardando..." : "Aceptar")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarConfirmarEliminar)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Eliminar nota</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarConfirmarEliminar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Seguro que deseas eliminar esta nota?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="CerrarConfirmarEliminar">Cancelar</button>
+                    <button class="btn btn-dark" @onclick="ConfirmarEliminarAsync" disabled="@guardando">
+                        @(guardando ? "Eliminando..." : "Aceptar")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<Toast Visible="mostrarToast" IsError="toastEsError" Message="@toastMensaje" OnClose="() => mostrarToast = false" />
+
+@code {
+    private PagedList<NotaRequest>? notas;
+    private int paginaActual = 1;
+    private bool cargando = true;
+
+    private int? filtroEstudianteId;
+    private int? filtroProfesorId;
+    private Materias? filtroMateria;
+    private int? filtroValorMinimo;
+
+    private int? notaSeleccionadaId;
+    private NotaRequest? notaEnEdicion;
+
+    private List<EstudianteRequest> estudiantesActivos = new();
+    private List<ProfesorRequest> profesoresActivos = new();
+
+    private bool mostrarModalForm;
+    private bool esEdicion;
+    private int? idEnEdicion;
+    private NotaFormModel formModel = new();
+    private bool guardando;
+
+    private bool mostrarConfirmarEliminar;
+
+    private bool mostrarToast;
+    private bool toastEsError;
+    private string toastMensaje = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(CargarAsync(), CargarCombosAsync());
+    }
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        try
+        {
+            var filterParams = new NotaFilterParams
+            {
+                EstudianteId = filtroEstudianteId,
+                ProfesorId = filtroProfesorId,
+                Materia = filtroMateria,
+                ValorMinimo = filtroValorMinimo,
+                PageNumber = paginaActual,
+                PageSize = 10
+            };
+
+            notas = await NotaApiService.GetNotasAsync(filterParams);
+        }
+        catch (ApiException ex)
+        {
+            MostrarToast(ex.Message, esError: true);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task CargarCombosAsync()
+    {
+        try
+        {
+            estudiantesActivos = await EstudianteApiService.GetEstudiantesAsync(new EstudianteParameters { PageSize = 50 });
+            profesoresActivos = await ProfesorApiService.GetProfesoresAsync(new ProfesorParameters { PageSize = 50 });
+        }
+        catch (ApiException ex)
+        {
+            MostrarToast(ex.Message, esError: true);
+        }
+    }
+
+    private async Task BuscarAsync()
+    {
+        paginaActual = 1;
+        notaSeleccionadaId = null;
+        await CargarAsync();
+    }
+
+    private async Task RefrescarAsync()
+    {
+        filtroEstudianteId = null;
+        filtroProfesorId = null;
+        filtroMateria = null;
+        filtroValorMinimo = null;
+        paginaActual = 1;
+        notaSeleccionadaId = null;
+        await CargarAsync();
+    }
+
+    private async Task CambiarPaginaAsync(int nuevaPagina)
+    {
+        paginaActual = nuevaPagina;
+        notaSeleccionadaId = null;
+        await CargarAsync();
+    }
+
+    private void AbrirModalCrear()
+    {
+        esEdicion = false;
+        idEnEdicion = null;
+        notaEnEdicion = null;
+        formModel = new NotaFormModel();
+        mostrarModalForm = true;
+    }
+
+    private void AbrirModalEditar()
+    {
+        var nota = notas?.FirstOrDefault(n => n.Id == notaSeleccionadaId);
+        if (nota is null) return;
+
+        esEdicion = true;
+        idEnEdicion = nota.Id;
+        notaEnEdicion = nota;
+        formModel = new NotaFormModel
+        {
+            Nombre = nota.Nombre,
+            Fecha = nota.Fecha,
+            EstudianteId = nota.EstudianteId,
+            ProfesorId = nota.ProfesorId,
+            Materia = nota.Materia,
+            Valor = nota.Valor
+        };
+        mostrarModalForm = true;
+    }
+
+    private void CerrarModalForm()
+    {
+        mostrarModalForm = false;
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+        try
+        {
+            if (esEdicion && idEnEdicion.HasValue)
+            {
+                await NotaApiService.UpdateNotaAsync(idEnEdicion.Value, new UpdateNotaRequest(
+                    formModel.Nombre,
+                    formModel.Valor,
+                    formModel.Fecha!.Value,
+                    formModel.Materia!.Value,
+                    formModel.EstudianteId,
+                    formModel.ProfesorId));
+                MostrarToast("Nota actualizada correctamente.", esError: false);
+            }
+            else
+            {
+                await NotaApiService.CreateNotaAsync(new CreateNotaRequest(
+                    formModel.Nombre,
+                    formModel.Valor,
+                    formModel.Fecha!.Value,
+                    formModel.Materia!.Value,
+                    formModel.EstudianteId,
+                    formModel.ProfesorId));
+                MostrarToast("Nota creada correctamente.", esError: false);
+            }
+
+            mostrarModalForm = false;
+            notaSeleccionadaId = null;
+            await CargarAsync();
+        }
+        catch (ApiException ex)
+        {
+            MostrarToast(ex.Message, esError: true);
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void AbrirConfirmarEliminar()
+    {
+        mostrarConfirmarEliminar = true;
+    }
+
+    private void CerrarConfirmarEliminar()
+    {
+        mostrarConfirmarEliminar = false;
+    }
+
+    private async Task ConfirmarEliminarAsync()
+    {
+        if (!notaSeleccionadaId.HasValue) return;
+
+        guardando = true;
+        try
+        {
+            await NotaApiService.DeleteNotaAsync(notaSeleccionadaId.Value);
+            MostrarToast("Nota eliminada correctamente.", esError: false);
+
+            mostrarConfirmarEliminar = false;
+            notaSeleccionadaId = null;
+            await CargarAsync();
+        }
+        catch (ApiException ex)
+        {
+            MostrarToast(ex.Message, esError: true);
+            mostrarConfirmarEliminar = false;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void MostrarToast(string mensaje, bool esError)
+    {
+        toastMensaje = mensaje;
+        toastEsError = esError;
+        mostrarToast = true;
+    }
+
+    private class NotaFormModel
+    {
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La fecha es obligatoria.")]
+        public DateOnly? Fecha { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un estudiante.")]
+        public int EstudianteId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un profesor.")]
+        public int ProfesorId { get; set; }
+
+        [Required(ErrorMessage = "Debe seleccionar una materia.")]
+        public Materias? Materia { get; set; }
+
+        [Range(0, 20, ErrorMessage = "La nota debe estar entre 0 y 20.")]
+        public int Valor { get; set; }
+    }
+}
