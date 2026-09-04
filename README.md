@@ -25,11 +25,9 @@ Solución en capas:
 
 ## Ejecución con Docker
 
-Requiere tener [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado. No hace falta instalar SQL Server ni el SDK de .NET.
+Requiere tener Docker Desktop instalado. No hace falta instalar SQL Server ni el SDK de .NET.
 
-```bash
-docker compose up --build
-```
+    docker compose up --build
 
 Al finalizar, quedan disponibles:
 
@@ -39,19 +37,17 @@ Al finalizar, quedan disponibles:
 | API | http://localhost:7250 |
 | Documentación de la API (Scalar) | http://localhost:7250/scalar/v1 |
 
-> Las URL son `http://`, no `https://`. Si el navegador las autocompleta a `https://` va a dar error de conexión — escríbelas a mano.
+> Las URL son http://, no https://. Si el navegador las autocompleta a https:// va a dar error de conexión — escríbelas a mano.
 
 La base de datos se crea y se llena automáticamente con datos de ejemplo (12 estudiantes, 12 profesores, 30 notas) cada vez que se levanta el contenedor de la Api. No es necesario ejecutar ningún script a mano.
 
 Para detener:
 
-```bash
-docker compose down
-```
+    docker compose down
 
 ## Script SQL
 
-En [`sql/schema.sql`](sql/schema.sql) está el script de creación de la base de datos (generado desde las migraciones de EF Core), incluido como documentación de la estructura.
+En sql/schema.sql está el script de creación de la base de datos (generado desde las migraciones de EF Core), incluido como documentación de la estructura.
 
 ## Funcionalidades
 
