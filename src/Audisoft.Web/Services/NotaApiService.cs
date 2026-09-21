@@ -43,6 +43,9 @@ public class NotaApiService : INotaApiService
             if (filterParams.ValorMinimo.HasValue)
                 query += $"&ValorMinimo={filterParams.ValorMinimo}";
 
+            if (filterParams.SoloInactivos)
+                query += "&SoloInactivos=true";
+
             var response = await _httpClient.GetAsync(query, cancellationToken);
             await ThrowIfErrorAsync(response, cancellationToken);
 

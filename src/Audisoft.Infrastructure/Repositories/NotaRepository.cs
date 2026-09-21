@@ -15,7 +15,8 @@ public class NotaRepository : RepositoryBase<Nota>, INotaRepository
         bool trackChanges,
         CancellationToken cancellationToken = default)
     {
-        return await FindByCondition(n => n.Status == Status.Activo &&
+        return await FindByCondition(n =>
+                n.Status == (parameters.SoloInactivos ? Status.Inactivo : Status.Activo) &&
                 (!parameters.EstudianteId.HasValue || n.EstudianteId == parameters.EstudianteId) &&
                 (!parameters.ProfesorId.HasValue || n.ProfesorId == parameters.ProfesorId) &&
                 (!parameters.Materia.HasValue || n.Materia == parameters.Materia) &&
@@ -25,7 +26,7 @@ public class NotaRepository : RepositoryBase<Nota>, INotaRepository
             .OrderByDescending(n => n.Fecha)
             .Skip((parameters.PageNumber - 1) * parameters.PageSize)
             .Take(parameters.PageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<Nota?> GetNotaAsync(
@@ -42,7 +43,8 @@ public class NotaRepository : RepositoryBase<Nota>, INotaRepository
     public async Task<int> GetNotasCountAsync(NotaParameters parameters, 
         CancellationToken cancellationToken = default)
     {
-        return await FindByCondition(n => n.Status == Status.Activo &&
+        return await FindByCondition(n =>
+                n.Status == (parameters.SoloInactivos ? Status.Inactivo : Status.Activo) &&
                 (!parameters.EstudianteId.HasValue || n.EstudianteId == parameters.EstudianteId) &&
                 (!parameters.ProfesorId.HasValue || n.ProfesorId == parameters.ProfesorId) &&
                 (!parameters.Materia.HasValue || n.Materia == parameters.Materia) &&

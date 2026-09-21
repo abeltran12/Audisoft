@@ -34,50 +34,6 @@ public class EstudianteServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_CuandoEstudianteNoTieneNotasActivas_DebeMarcarloInactivoYGuardar()
-    {
-        var estudianteId = 1;
-        var estudiante = new Estudiante { Id = estudianteId, Nombre = "Juan Pérez" };
-
-        _estudianteRepository
-            .GetEstudianteAsync(estudianteId, true, Arg.Any<CancellationToken>())
-            .Returns(estudiante);
-
-        _notaRepository
-            .HasActiveNotasByEstudianteAsync(estudianteId, Arg.Any<CancellationToken>())
-            .Returns(false);
-
-        await _sut.DeleteAsync(estudianteId);
-
-        _estudianteRepository.Received(1).DeleteEstudiante(estudiante);
-        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task DeleteAsync_CuandoEstudianteTieneNotasActivas_DebeLanzarBusinessRuleException()
-    {
-        var estudianteId = 1;
-        var estudiante = new Estudiante { Id = estudianteId, Nombre = "Juan Pérez" };
-
-        _estudianteRepository
-            .GetEstudianteAsync(estudianteId, true, Arg.Any<CancellationToken>())
-            .Returns(estudiante);
-
-        _notaRepository
-            .HasActiveNotasByEstudianteAsync(estudianteId, Arg.Any<CancellationToken>())
-            .Returns(true);
-
-        var act = async () => await _sut.DeleteAsync(estudianteId);
-
-        await act.Should()
-            .ThrowAsync<BusinessRuleException>()
-            .WithMessage("No se puede eliminar el estudiante porque tiene notas activas asociadas.");
-
-        _estudianteRepository.DidNotReceive().DeleteEstudiante(Arg.Any<Estudiante>());
-        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task DeleteAsync_CuandoEstudianteNoExiste_DebeLanzarNotFoundException()
     {
         var estudianteId = 999;
@@ -90,7 +46,6 @@ public class EstudianteServiceTests
 
         await act.Should().ThrowAsync<NotFoundException>();
 
-        await _notaRepository.DidNotReceive().HasActiveNotasByEstudianteAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

@@ -14,4 +14,5 @@ public interface IProfesorRepository : IRepositoryBase<Profesor>
     void CreateProfesor(Profesor profesor);
     void UpdateProfesor(Profesor profesor);
     void DeleteProfesor(Profesor profesor);
+    Task<bool> IsProfesorInactivoAsync(int profesorId, CancellationToken cancellationToken = default);
 }

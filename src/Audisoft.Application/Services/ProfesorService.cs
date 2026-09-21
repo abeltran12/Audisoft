@@ -87,12 +87,6 @@ public class ProfesorService : IProfesorService
             (id, trackChanges: true, cancellationToken)
             ?? throw new NotFoundException($"Profesor con id {id} no encontrado.");
 
-        var tieneNotasActivas = await _unitOfWork.NotaRepository.
-            HasActiveNotasByProfesorAsync(id, cancellationToken);
-
-        if (tieneNotasActivas)
-            throw new BusinessRuleException("No se puede eliminar el profesor porque tiene notas activas asociadas.");
-
         _unitOfWork.ProfesorRepository.DeleteProfesor(profesor);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -14,4 +14,6 @@ public interface IEstudianteRepository : IRepositoryBase<Estudiante>
     void CreateEstudiante(Estudiante estudiante);
     void UpdateEstudiante(Estudiante estudiante);
     void DeleteEstudiante(Estudiante estudiante);
+
+    Task<bool> IsEstudianteInactivoAsync(int estudianteId, CancellationToken cancellationToken = default);
 }

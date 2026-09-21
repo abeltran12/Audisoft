@@ -13,4 +13,5 @@ public class NotaParameters : RequestParameters
     public int? ProfesorId { get; set; }
     public Materias? Materia { get; set; }
     public int? ValorMinimo { get; set; }
+    public bool SoloInactivos { get; set; }
 }

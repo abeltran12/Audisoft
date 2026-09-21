@@ -30,6 +30,9 @@ public class EstudianteApiService : IEstudianteApiService
             if (parameters.Id.HasValue)
                 query += $"&Id={parameters.Id.Value}";
 
+            if (parameters.SoloInactivos)
+                query += "&SoloInactivos=true";
+
             var response = await _httpClient.GetAsync(query, cancellationToken);
             await ThrowIfErrorAsync(response, cancellationToken);
 

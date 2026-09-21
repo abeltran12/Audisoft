@@ -9,4 +9,5 @@ public class ProfesorParameters : RequestParameters
 
     public string? Nombre { get; set; }
     public int? Id { get; set; }
+    public bool SoloInactivos { get; set; }
 }

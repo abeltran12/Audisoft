@@ -89,12 +89,6 @@ public class EstudianteService : IEstudianteService
             (id, trackChanges: true, cancellationToken)
             ?? throw new NotFoundException($"Estudiante con id {id} no encontrado.");
 
-        var tieneNotasActivas = await _unitOfWork.NotaRepository.
-            HasActiveNotasByEstudianteAsync(id, cancellationToken);
-
-        if (tieneNotasActivas)
-            throw new BusinessRuleException("No se puede eliminar el estudiante porque tiene notas activas asociadas.");
-
         _unitOfWork.EstudianteRepository.DeleteEstudiante(estudiante);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

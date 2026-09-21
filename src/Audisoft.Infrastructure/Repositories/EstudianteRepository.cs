@@ -15,10 +15,11 @@ public class EstudianteRepository : RepositoryBase<Estudiante>, IEstudianteRepos
         bool trackChanges,
         CancellationToken cancellationToken = default)
     {
-        return await FindByCondition(e => e.Status == Status.Activo &&
+        return await FindByCondition(e =>
+                e.Status == (parameters.SoloInactivos ? Status.Inactivo : Status.Activo) &&
                 (string.IsNullOrEmpty(parameters.Nombre) || e.Nombre.Contains(parameters.Nombre)) &&
                 (!parameters.Id.HasValue || e.Id == parameters.Id.Value), trackChanges)
-            .OrderBy(e => e.Nombre)
+            .OrderBy(e => e.Id)
             .Skip((parameters.PageNumber - 1) * parameters.PageSize)
             .Take(parameters.PageSize)
             .ToListAsync();
@@ -33,10 +34,12 @@ public class EstudianteRepository : RepositoryBase<Estudiante>, IEstudianteRepos
             .SingleOrDefaultAsync();
     }
 
-    public async Task<int> GetEstudiantesCountAsync(EstudianteParameters parameters, 
+    public async Task<int> GetEstudiantesCountAsync(
+        EstudianteParameters parameters, 
         CancellationToken cancellationToken = default)
     {
-        return await FindByCondition(e => e.Status == Status.Activo &&
+        return await FindByCondition(e =>
+                e.Status == (parameters.SoloInactivos ? Status.Inactivo : Status.Activo) &&
                 (string.IsNullOrEmpty(parameters.Nombre)
                 || e.Nombre.Contains(parameters.Nombre)) &&
                 (!parameters.Id.HasValue || e.Id == parameters.Id.Value),
@@ -52,5 +55,14 @@ public class EstudianteRepository : RepositoryBase<Estudiante>, IEstudianteRepos
     {
         estudiante.Status = Status.Inactivo;
         Update(estudiante);
+    }
+
+    public async Task<bool> IsEstudianteInactivoAsync(
+        int estudianteId, 
+        CancellationToken cancellationToken = default)
+    {
+        return await FindByCondition(e => e.Id == estudianteId && e.Status == Status.Inactivo, 
+            trackChanges: false)
+            .AnyAsync(cancellationToken);
     }
 }

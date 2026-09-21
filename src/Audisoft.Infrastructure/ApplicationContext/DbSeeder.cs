@@ -7,16 +7,12 @@ public static class DbSeeder
 {
     private static readonly string[] NombresProfesores =
     [
-        "Carlos Pérez", "María González", "Luis Ramírez", "Sofía Torres",
-        "Andrés Gómez", "Valentina Díaz", "Jorge Herrera", "Camila Rojas",
-        "Miguel Castro", "Daniela Morales", "Fernando Ruiz", "Paola Vargas"
+        "Carlos Pérez", "María González", "Luis Ramírez"
     ];
 
     private static readonly string[] NombresEstudiantes =
     [
-        "Juan López", "Ana Martínez", "Pedro Sánchez", "Laura Fernández",
-        "Diego Ramos", "Isabella Mendoza", "Sebastián Guzmán", "Valeria Cruz",
-        "Mateo Ortiz", "Camila Reyes", "Nicolás Vega", "Gabriela Silva"
+        "Juan López", "Ana Martínez", "Pedro Sánchez"
     ];
 
     private static readonly string[] NombresEvaluaciones =
@@ -48,7 +44,7 @@ public static class DbSeeder
 
             var notas = new List<Nota>();
 
-            for (var i = 0; i < 30; i++)
+            for (var i = 0; i < 9; i++)
             {
                 var mes = (i % 12) + 1;
                 var dia = 3 + (i % 25);

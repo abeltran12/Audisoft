@@ -15,10 +15,11 @@ public class ProfesorRepository : RepositoryBase<Profesor>, IProfesorRepository
         bool trackChanges,
         CancellationToken cancellationToken = default)
     {
-        return await FindByCondition(p => p.Status == Status.Activo &&
+        return await FindByCondition(p =>
+                p.Status == (parameters.SoloInactivos ? Status.Inactivo : Status.Activo) &&
                 (string.IsNullOrEmpty(parameters.Nombre) || p.Nombre.Contains(parameters.Nombre)) &&
                 (!parameters.Id.HasValue || p.Id == parameters.Id.Value), trackChanges)
-            .OrderBy(p => p.Nombre)
+            .OrderBy(p => p.Id)
             .Skip((parameters.PageNumber - 1) * parameters.PageSize)
             .Take(parameters.PageSize)
             .ToListAsync();
@@ -33,10 +34,12 @@ public class ProfesorRepository : RepositoryBase<Profesor>, IProfesorRepository
             .SingleOrDefaultAsync();
     }
 
-    public async Task<int> GetProfesoresCountAsync(ProfesorParameters parameters, 
+    public async Task<int> GetProfesoresCountAsync(
+        ProfesorParameters parameters, 
         CancellationToken cancellationToken = default)
     {
-        return await FindByCondition(p => p.Status == Status.Activo &&
+        return await FindByCondition(p =>
+                p.Status == (parameters.SoloInactivos ? Status.Inactivo : Status.Activo) &&
                 (string.IsNullOrEmpty(parameters.Nombre)
                 || p.Nombre.Contains(parameters.Nombre)) &&
                 (!parameters.Id.HasValue || p.Id == parameters.Id.Value),
@@ -52,5 +55,14 @@ public class ProfesorRepository : RepositoryBase<Profesor>, IProfesorRepository
     {
         profesor.Status = Status.Inactivo;
         Update(profesor);
+    }
+
+    public async Task<bool> IsProfesorInactivoAsync(
+        int profesorId, 
+        CancellationToken cancellationToken = default)
+    {
+        return await FindByCondition(p => p.Id == profesorId && p.Status == Status.Inactivo, 
+            trackChanges: false)
+            .AnyAsync(cancellationToken);
     }
 }

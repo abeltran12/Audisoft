@@ -5,6 +5,7 @@
     <Project Path="src/Audisoft.Domain/Audisoft.Domain.csproj" Id="f88cc9ea-238a-46fc-b680-2382951b0895" />
     <Project Path="src/Audisoft.Infrastructure/Audisoft.Infrastructure.csproj" Id="de891f71-23ff-401d-a953-14c79eaf46e6" />
     <Project Path="src/Audisoft.Web/Audisoft.Web.csproj" Id="cee18655-f7ce-434b-a2ff-af1549338230" />
+    <Project Path="src/Audisoft.Web.Host/Audisoft.Web.Host.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Audisoft.Application.UnitTests/Audisoft.Application.UnitTests.csproj" Id="c6c32e9f-b0c9-4e20-a252-7e0da832fd19" />

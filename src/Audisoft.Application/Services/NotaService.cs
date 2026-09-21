@@ -93,6 +93,19 @@ public class NotaService : INotaService
         var nota = await _unitOfWork.NotaRepository.GetNotaAsync(id, trackChanges: true, cancellationToken)
             ?? throw new NotFoundException($"Nota con id {id} no encontrada.");
 
+        var estudianteInactivo = 
+            await _unitOfWork.EstudianteRepository.IsEstudianteInactivoAsync(nota.EstudianteId, 
+            cancellationToken);
+
+        var profesorInactivo = 
+            await _unitOfWork.ProfesorRepository.IsProfesorInactivoAsync(nota.ProfesorId, 
+            cancellationToken);
+
+        if (!estudianteInactivo || !profesorInactivo)
+        {
+            throw new Exception("Solo se puede eliminar la nota si el estudiante y el profesor están inactivos.");
+        }
+
         _unitOfWork.NotaRepository.DeleteNota(nota);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

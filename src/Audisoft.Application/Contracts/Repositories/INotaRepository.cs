@@ -14,7 +14,4 @@ public interface INotaRepository : IRepositoryBase<Nota>
     void CreateNota(Nota nota);
     void UpdateNota(Nota nota);
     void DeleteNota(Nota nota);
-
-    Task<bool> HasActiveNotasByEstudianteAsync(int estudianteId, CancellationToken cancellationToken = default);
-    Task<bool> HasActiveNotasByProfesorAsync(int profesorId, CancellationToken cancellationToken = default);
 }
